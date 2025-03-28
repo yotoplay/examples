@@ -9,4 +9,3 @@ Each sample app has its own README with instructions on how to run it in its own
 ## List
 
 - [React](react/README.md)
--

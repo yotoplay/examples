@@ -1,15 +1,17 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter, Routes, Route } from "react-router";
-import App from "./app";
+import Index from "./Index";
+import Login from "./pages/Login";
 import "./index.css";
+import AppForm from "./pages/AppForm";
 
-const root = document.getElementById("root");
-
-ReactDOM.createRoot(root).render(
+ReactDOM.createRoot(document.getElementById("root")).render(
   <BrowserRouter>
     <Routes>
-      <Route path="/" element={<App />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/app" element={<AppForm />} />
+      <Route path="/" element={<Index />} />
     </Routes>
   </BrowserRouter>
 );
