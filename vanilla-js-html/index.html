@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Yoto Vanilla JS Example Uploader</title>
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <div id="app">
+      <button id="login-button">Login</button>
+
+      <div class="upload-form-container" style="display: none">
+        <h2>Update Card</h2>
+        <form id="upload-form">
+          <div>
+            <label for="cards-dropdown">Select Card:</label>
+            <select id="cards-dropdown" required></select>
+          </div>
+          <div>
+            <label for="audio-file">Audio File:</label>
+            <input type="file" id="audio-file" accept="audio/*" required />
+          </div>
+          <div>
+            <label for="title">Title:</label>
+            <input type="text" id="title" placeholder="My Myo Card" required />
+          </div>
+          <button type="submit" id="upload-button">Upload To Card</button>
+          <div id="upload-progress"></div>
+        </form>
+      </div>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
