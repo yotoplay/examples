@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { getTokens } from "../token-utils";
 
-export default function AppForm() {
+export default function App() {
   const navigate = useNavigate();
   const [cards, setCards] = useState([]);
 
