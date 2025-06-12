@@ -44,22 +44,32 @@ const start = async () => {
   });
 
   if (tokenResponse) {
-    const familyResponse = await fetch("https://api.yotoplay.com/user/family", {
-      headers: {
-        Authorization: `Bearer ${tokenResponse.accessToken}`,
-      },
-    });
-    const { family } = await familyResponse.json();
-    const { devices } = family;
+    const deviceResponse = await fetch(
+      "https://api.yotoplay.com/device-v2/devices/mine",
+      {
+        headers: {
+          Authorization: `Bearer ${tokenResponse.accessToken}`,
+        },
+      }
+    );
+    const { devices } = await deviceResponse.json();
+
+    const onlineDevices = devices.filter(
+      (device) => device.online && device.deviceFamily === "v3"
+    );
 
     console.log("Available Yoto devices:");
-    console.log(devices);
+    console.log(onlineDevices);
 
     if (!devices || devices.length === 0) {
       throw new Error("No Yoto devices found in your family");
     }
 
-    deviceId = devices[0].deviceId;
+    if (onlineDevices.length === 0) {
+      throw new Error("Your devices are offline, please turn on a v3 player");
+    }
+
+    deviceId = onlineDevices[0].deviceId;
 
     console.log("deviceId", deviceId);
 
@@ -78,7 +88,7 @@ const start = async () => {
 
     colorPicker.addEventListener("input", () => {
       const color = colorPicker.value;
-      debouncedSetLight(color);
+      debouncedSetLight(color, deviceId);
     });
 
     mqttClient.on("connect", () => {
