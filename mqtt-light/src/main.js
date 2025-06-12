@@ -1,8 +1,13 @@
 import "./style.css";
 import mqtt from "mqtt";
-import { webLogin } from "@yotoplay/sdk";
 import debounce from "lodash.debounce";
 import { jwtDecode } from "jwt-decode";
+import {
+  getStoredTokens,
+  storeTokens,
+  clearTokens,
+  refreshAccessToken,
+} from "./tokens";
 
 const MQTT_URL = "wss://aqrphjqbp3u2z-ats.iot.eu-west-2.amazonaws.com";
 const MQTT_AUTH_NAME = "PublicJWTAuthorizer";
@@ -34,118 +39,179 @@ const getValidAccessToken = async () => {
   return accessToken;
 };
 
+// Handle OAuth callback and login flow
+const handleAuthCallback = async () => {
+  // Check if we have an authorization code (we've just been redirected from Yoto's login page)
+  const params = new URLSearchParams(window.location.search);
+  const code = params.get("code");
+
+  if (code) {
+    // Exchange authorization code for tokens
+    const response = await fetch("https://login.yotoplay.com/oauth/token", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams({
+        grant_type: "authorization_code",
+        client_id: CLIENT_ID,
+        client_secret: CLIENT_SECRET,
+        code: code,
+        redirect_uri: window.location.origin,
+      }),
+    });
+
+    if (response.ok) {
+      const { access_token, refresh_token } = await response.json();
+      storeTokens(access_token, refresh_token);
+
+      // Clean up URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+
+      return access_token;
+    } else {
+      throw new Error("Failed to exchange code for tokens");
+    }
+  }
+
+  return null;
+};
+
+// Login function to redirect to OAuth
+const initiateLogin = () => {
+  const authUrl = "https://login.yotoplay.com/authorize";
+  const params = new URLSearchParams({
+    audience: "https://api.yotoplay.com",
+    scope: "offline_access",
+    response_type: "code",
+    client_id: CLIENT_ID,
+    redirect_uri: window.location.origin,
+  });
+
+  // Redirect user to Yoto's login page
+  window.location.href = `${authUrl}?${params.toString()}`;
+};
+
 const start = async () => {
   const colorPicker = document.querySelector("#colorPicker");
   const debouncedSetLight = debounce(setAmbientLight, 600, { leading: true });
 
-  const tokenResponse = await webLogin({
-    clientId: CLIENT_ID,
-    clientSecret: CLIENT_SECRET,
+  // Handle OAuth callback first
+  let accessToken = await handleAuthCallback();
+
+  // If no token from callback, try to get valid stored token
+  if (!accessToken) {
+    accessToken = await getValidAccessToken();
+  }
+
+  // If still no token, redirect to login
+  if (!accessToken) {
+    console.log("No valid token found, redirecting to login...");
+    initiateLogin();
+    return;
+  }
+
+  const deviceResponse = await fetch(
+    "https://api.yotoplay.com/device-v2/devices/mine",
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    }
+  );
+  const { devices } = await deviceResponse.json();
+
+  const onlineDevices = devices.filter(
+    (device) => device.online && device.deviceFamily === "v3"
+  );
+
+  console.log("Available Yoto devices:");
+  console.log(onlineDevices);
+
+  if (!devices || devices.length === 0) {
+    throw new Error("No Yoto devices found in your family");
+  }
+
+  if (onlineDevices.length === 0) {
+    throw new Error("Your devices are offline, please turn on a v3 player");
+  }
+
+  deviceId = onlineDevices[0].deviceId;
+
+  console.log("deviceId", deviceId);
+
+  const clientId = `DASH${deviceId}`;
+
+  mqttClient = mqtt.connect(MQTT_URL, {
+    keepalive: 300,
+    port: 443,
+    protocol: "wss",
+    username: `${deviceId}?x-amz-customauthorizer-name=${MQTT_AUTH_NAME}`,
+    password: accessToken,
+    reconnectPeriod: 0,
+    clientId,
+    ALPNProtocols: ["x-amzn-mqtt-ca"],
   });
 
-  if (tokenResponse) {
-    const deviceResponse = await fetch(
-      "https://api.yotoplay.com/device-v2/devices/mine",
-      {
-        headers: {
-          Authorization: `Bearer ${tokenResponse.accessToken}`,
-        },
-      }
-    );
-    const { devices } = await deviceResponse.json();
+  colorPicker.addEventListener("input", () => {
+    const color = colorPicker.value;
+    debouncedSetLight(color, deviceId);
+  });
 
-    const onlineDevices = devices.filter(
-      (device) => device.online && device.deviceFamily === "v3"
-    );
+  mqttClient.on("connect", () => {
+    console.log("Connected to Yoto MQTT broker");
 
-    console.log("Available Yoto devices:");
-    console.log(onlineDevices);
+    // Subscribe to device topics for events, status, and responses
+    if (deviceId) {
+      const topics = [
+        `device/${deviceId}/events`,
+        `device/${deviceId}/status`,
+        `device/${deviceId}/response`,
+      ];
 
-    if (!devices || devices.length === 0) {
-      throw new Error("No Yoto devices found in your family");
-    }
+      const topic = `device/${deviceId}/response`;
 
-    if (onlineDevices.length === 0) {
-      throw new Error("Your devices are offline, please turn on a v3 player");
-    }
-
-    deviceId = onlineDevices[0].deviceId;
-
-    console.log("deviceId", deviceId);
-
-    const clientId = `DASH${deviceId}`;
-
-    mqttClient = mqtt.connect(MQTT_URL, {
-      keepalive: 300,
-      port: 443,
-      protocol: "wss",
-      username: `${deviceId}?x-amz-customauthorizer-name=${MQTT_AUTH_NAME}`,
-      password: tokenResponse.accessToken,
-      reconnectPeriod: 0,
-      clientId,
-      ALPNProtocols: ["x-amzn-mqtt-ca"],
-    });
-
-    colorPicker.addEventListener("input", () => {
-      const color = colorPicker.value;
-      debouncedSetLight(color, deviceId);
-    });
-
-    mqttClient.on("connect", () => {
-      console.log("Connected to Yoto MQTT broker");
-
-      // Subscribe to device topics for events, status, and responses
-      if (deviceId) {
-        const topics = [
-          `device/${deviceId}/events`,
-          `device/${deviceId}/status`,
-          `device/${deviceId}/response`,
-        ];
-
-        const topic = `device/${deviceId}/response`;
-
-        topics.forEach((topic) => {
-          mqttClient.subscribe(topic, (err) => {
-            if (err) {
-              console.error(`Failed to subscribe to ${topic}:`, err);
-            } else {
-              console.log(`Subscribed to ${topic}`);
-            }
-          });
-        });
-
-        // Request initial status update
-        updateStatus();
-      }
-    });
-
-    mqttClient.on("message", (topic, message) => {
-      console.log(`MQTT Topic: ${topic}`);
-      console.log(`MQTT Message: ${message.toString()}`);
-
-      const [base, device, messageType] = topic.split("/");
-
-      if (device === deviceId) {
-        try {
-          const payload = JSON.parse(message.toString());
-
-          if (messageType === "events") {
-            parseEventsMessage(payload);
-          } else if (messageType === "status") {
-            parseStatusMessage(payload);
-          } else if (messageType === "response") {
-            parseResponseMessage(payload);
+      topics.forEach((topic) => {
+        mqttClient.subscribe(topic, (err) => {
+          if (err) {
+            console.error(`Failed to subscribe to ${topic}:`, err);
+          } else {
+            console.log(`Subscribed to ${topic}`);
           }
-        } catch (error) {
-          console.error("Error parsing MQTT message:", error);
-        }
-      }
-    });
+        });
+      });
 
-    mqttClient.on("error", (error) => {
-      console.error("MQTT Error:", error);
-    });
-  }
+      // Request initial status update
+      updateStatus();
+    }
+  });
+
+  mqttClient.on("message", (topic, message) => {
+    console.log(`MQTT Topic: ${topic}`);
+    console.log(`MQTT Message: ${message.toString()}`);
+
+    const [base, device, messageType] = topic.split("/");
+
+    if (device === deviceId) {
+      try {
+        const payload = JSON.parse(message.toString());
+
+        if (messageType === "events") {
+          parseEventsMessage(payload);
+        } else if (messageType === "status") {
+          parseStatusMessage(payload);
+        } else if (messageType === "response") {
+          parseResponseMessage(payload);
+        }
+      } catch (error) {
+        console.error("Error parsing MQTT message:", error);
+      }
+    }
+  });
+
+  mqttClient.on("error", (error) => {
+    console.error("MQTT Error:", error);
+  });
 };
 
 function setAmbientLight(color, deviceId) {
