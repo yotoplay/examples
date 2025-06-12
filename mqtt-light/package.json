@@ -1,0 +1,21 @@
+{
+  "name": "mqtt-light",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "start": "vite --open",
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "vite": "^6.2.0"
+  },
+  "dependencies": {
+    "@yotoplay/sdk": "^0.0.1-alpha.4",
+    "jwt-decode": "^4.0.0",
+    "lodash.debounce": "^4.0.8",
+    "mqtt": "^5.11.0"
+  }
+}
