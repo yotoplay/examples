@@ -29,11 +29,30 @@ export async function getTokens() {
   try {
     let { accessToken, refreshToken } = JSON.parse(tokensRaw);
 
+    // If access token is expired, try to refresh it
     if (isTokenExpired(accessToken)) {
-      const newTokens = await refreshTokens(refreshToken);
-      accessToken = newTokens.accessToken;
-      refreshToken = newTokens.refreshToken;
-      localStorage.setItem(storageKey, JSON.stringify(newTokens));
+      console.log("Access token expired, attempting refresh...");
+
+      if (!refreshToken) {
+        console.log("No refresh token available");
+        localStorage.removeItem(storageKey);
+        return null;
+      }
+
+      try {
+        const newTokens = await refreshTokens(refreshToken);
+        accessToken = newTokens.accessToken;
+        refreshToken = newTokens.refreshToken;
+
+        // Store the new tokens
+        localStorage.setItem(storageKey, JSON.stringify(newTokens));
+        console.log("Token refresh successful");
+      } catch (error) {
+        console.error("Token refresh failed:", error);
+        // If refresh fails, clear tokens and return null
+        localStorage.removeItem(storageKey);
+        return null;
+      }
     }
 
     return { accessToken, refreshToken };
@@ -45,6 +64,8 @@ export async function getTokens() {
 }
 
 export async function refreshTokens(refreshToken) {
+  console.log("Refreshing tokens...");
+
   const tokenResponse = await fetch(tokenUrl, {
     method: "POST",
     headers: {
@@ -59,15 +80,16 @@ export async function refreshTokens(refreshToken) {
   });
 
   if (!tokenResponse.ok) {
-    throw new Error(
-      `Refresh token request failed: ${tokenResponse.statusText}`
-    );
+    const errorText = await tokenResponse.text();
+    console.error("Refresh token request failed:", tokenResponse.status, errorText);
+    throw new Error(`Refresh token request failed: ${tokenResponse.status} ${errorText}`);
   }
 
   const tokenData = await tokenResponse.json();
+  console.log("Refresh successful, new tokens received");
 
   return {
     accessToken: tokenData.access_token,
-    refreshToken: tokenData.refresh_token,
+    refreshToken: tokenData.refresh_token || refreshToken, // Use new refresh token if provided, otherwise keep the old one
   };
 }

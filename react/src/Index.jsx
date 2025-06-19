@@ -10,17 +10,15 @@ function Index() {
       const params = new URLSearchParams(window.location.search);
       const code = params.get("code");
       const error = params.get("error");
-      const error_description = params.get("error_description");
-
       if (error) {
         console.log("Error:", error);
-        console.log("Error description:", error_description);
+        navigate("/login");
         return;
       }
 
-      // If we have a code, we need to exchange it for tokens (new login)
+      // If we have a code, we need to exchange it for tokens (initial login)
       if (code) {
-        console.log("Exchanging authorization code for tokens using PKCE...");
+        console.log("Initial login: Exchanging authorization code for tokens using PKCE...");
         console.log("Client ID:", import.meta.env.VITE_CLIENT_ID);
         console.log("Code:", code);
         console.log("Redirect URI:", window.location.origin);
@@ -50,11 +48,12 @@ function Index() {
         if (!res.ok) {
           const errorText = await res.text();
           console.error("Token exchange failed:", res.status, errorText);
-          throw new Error(`Token exchange failed: ${res.status} ${errorText}`);
+          navigate("/login");
+          return;
         }
         
         const json = await res.json();
-        console.log("Token exchange successful:", json);
+        console.log("Initial login successful:", json);
 
         // Clean up PKCE data
         sessionStorage.removeItem('pkce_code_verifier');
@@ -72,10 +71,10 @@ function Index() {
         return;
       }
 
-      // Check if we have existing tokens
+      // Check if we have existing tokens and try to use refresh token
+      console.log("Checking for existing tokens...");
       const tokens = await getTokens();
 
-      // If we don't have tokens stored, we need to login
       if (!tokens) {
         console.log("No tokens found, navigating to login");
         navigate("/login");
