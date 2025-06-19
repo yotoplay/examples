@@ -2,9 +2,21 @@ import { jwtDecode } from "jwt-decode";
 
 export const storageKey = "YOTO_SAMPLE_REACT";
 
+const clientId = import.meta.env.VITE_CLIENT_ID;
+const tokenUrl = "https://login.yotoplay.com/oauth/token";
+
 export function isTokenExpired(token) {
-  const decodedToken = jwtDecode(token);
-  return Date.now() >= (decodedToken.exp ?? 0) * 1000;
+  if (!token) {
+    return true;
+  }
+
+  try {
+    const decodedToken = jwtDecode(token);
+    return Date.now() >= (decodedToken.exp ?? 0) * 1000;
+  } catch (error) {
+    console.error("Error decoding token:", error);
+    return true;
+  }
 }
 
 export async function getTokens() {
@@ -14,16 +26,22 @@ export async function getTokens() {
     return null;
   }
 
-  let { accessToken, refreshToken } = JSON.parse(tokensRaw);
+  try {
+    let { accessToken, refreshToken } = JSON.parse(tokensRaw);
 
-  if (isTokenExpired(accessToken)) {
-    const newTokens = await refreshTokens(refreshToken);
-    accessToken = newTokens.accessToken;
-    refreshToken = newTokens.refreshToken;
-    localStorage.setItem(storageKey, JSON.stringify(newTokens));
+    if (isTokenExpired(accessToken)) {
+      const newTokens = await refreshTokens(refreshToken);
+      accessToken = newTokens.accessToken;
+      refreshToken = newTokens.refreshToken;
+      localStorage.setItem(storageKey, JSON.stringify(newTokens));
+    }
+
+    return { accessToken, refreshToken };
+  } catch (error) {
+    console.error("Error parsing tokens from localStorage:", error);
+    localStorage.removeItem(storageKey);
+    return null;
   }
-
-  return { accessToken, refreshToken };
 }
 
 export async function refreshTokens(refreshToken) {

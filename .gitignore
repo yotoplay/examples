@@ -14,6 +14,7 @@ dist-ssr
 
 .env
 .npmrc
+.cursor 
 
 # Editor directories and files
 .vscode/*
