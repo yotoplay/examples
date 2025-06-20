@@ -193,6 +193,22 @@ const showUploadForm = async () => {
   const formContainer = document.querySelector(".upload-form-container");
   formContainer.style.display = "block";
 
+  // Show logout button
+  const logoutButton = document.getElementById("logout-button");
+  logoutButton.style.display = "block";
+
+  // Setup logout functionality
+  logoutButton.addEventListener("click", () => {
+    console.log("Logout clicked, clearing tokens...");
+    clearTokens();
+    console.log("Tokens cleared, redirecting to login");
+
+    // Hide upload form and show login button
+    formContainer.style.display = "none";
+    logoutButton.style.display = "none";
+    loginButton.style.display = "block";
+  });
+
   // Load initial cards list
   await updateCardsList();
 

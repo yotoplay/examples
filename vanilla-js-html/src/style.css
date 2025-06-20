@@ -80,6 +80,32 @@ button:focus-visible {
   }
 }
 
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.header h2 {
+  margin: 0;
+}
+
+#logout-button {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+#logout-button:hover {
+  background-color: #c82333;
+  border-color: #c82333;
+}
+
 .upload-progress {
   margin-top: 10px;
   font-weight: bold;
