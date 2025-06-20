@@ -14,12 +14,13 @@ It shows you how to authenticate and upload an audio file to a card.
    cp .env.example .env
    ```
 
-   Then edit `.env` with your Client ID and Client Secret:
+   Then edit `.env` with your Client ID:
 
    ```
-   VITE_YOTO_CLIENT_ID=your_client_id_here
-   VITE_YOTO_CLIENT_SECRET=your_client_secret_here
+   VITE_CLIENT_ID=your_client_id_here
    ```
+
+   **Note**: This app uses PKCE (Proof Key for Code Exchange) for security, so no client secret is needed!
 
 2. Install dependencies:
 
@@ -31,3 +32,23 @@ It shows you how to authenticate and upload an audio file to a card.
    ```bash
    npm start
    ```
+
+## Authentication Flow
+
+This app implements a secure, persistent authentication flow:
+
+### Initial Login
+- Uses PKCE (Proof Key for Code Exchange) for the first login
+- No client secret required - more secure for client-side apps
+- Gets both access token and refresh token
+
+### Persistent Login
+- Uses refresh tokens for subsequent logins
+- Automatically refreshes expired access tokens
+- Only redirects to login when refresh token is invalid/expired
+
+### Security Features
+- PKCE for initial authentication (no client secret exposure)
+- Automatic token refresh
+- Secure token storage in localStorage
+- Proper error handling

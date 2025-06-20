@@ -6,12 +6,12 @@ import {
   refreshAccessToken,
 } from "./tokens";
 import { uploadToCard } from "./upload";
+import { generatePKCE } from "./pkce-utils";
 
 const clientId = import.meta.env.VITE_CLIENT_ID;
-const clientSecret = import.meta.env.VITE_CLIENT_SECRET;
 
-if (!clientId || !clientSecret) {
-  throw new Error("Client ID and client secret are required");
+if (!clientId) {
+  throw new Error("Client ID is required");
 }
 
 // check if token is expired
@@ -34,18 +34,30 @@ const getValidAccessToken = async () => {
 
 // login button click events
 const loginButton = document.getElementById("login-button");
-loginButton.addEventListener("click", () => {
-  const authUrl = "https://login.yotoplay.com/authorize";
-  const params = new URLSearchParams({
-    audience: "https://api.yotoplay.com",
-    scope: "offline_access",
-    response_type: "code",
-    client_id: clientId,
-    redirect_uri: window.location.origin,
-  });
+loginButton.addEventListener("click", async () => {
+  try {
+    // Generate PKCE code verifier and challenge
+    const { codeVerifier, codeChallenge } = await generatePKCE();
 
-  // Redirect user to Yoto's login page
-  window.location.href = `${authUrl}?${params.toString()}`;
+    // Store the code verifier in session storage for the token exchange
+    sessionStorage.setItem('pkce_code_verifier', codeVerifier);
+
+    const authUrl = "https://login.yotoplay.com/authorize";
+    const params = new URLSearchParams({
+      audience: "https://api.yotoplay.com",
+      scope: "offline_access",
+      response_type: "code",
+      client_id: clientId,
+      code_challenge: codeChallenge,
+      code_challenge_method: "S256",
+      redirect_uri: window.location.origin,
+    });
+
+    // Redirect user to Yoto's login page
+    window.location.href = `${authUrl}?${params.toString()}`;
+  } catch (error) {
+    console.error("Error generating PKCE:", error);
+  }
 });
 
 const updateCardsList = async () => {
@@ -118,8 +130,23 @@ const start = async () => {
   // Check if we have an authorization code (we've just been redirected from Yoto's login page)
   const params = new URLSearchParams(window.location.search);
   const code = params.get("code");
+  const error = params.get("error");
+
+  if (error) {
+    console.error("Authorization error:", error);
+    return;
+  }
 
   if (code) {
+    // Get the stored code verifier
+    const codeVerifier = sessionStorage.getItem('pkce_code_verifier');
+    if (!codeVerifier) {
+      console.error("No PKCE code verifier found");
+      return;
+    }
+
+    console.log("Exchanging authorization code for tokens using PKCE...");
+
     // Exchange authorization code for tokens
     const response = await fetch("https://login.yotoplay.com/oauth/token", {
       method: "POST",
@@ -129,7 +156,7 @@ const start = async () => {
       body: new URLSearchParams({
         grant_type: "authorization_code",
         client_id: clientId,
-        client_secret: clientSecret,
+        code_verifier: codeVerifier,
         code: code,
         redirect_uri: window.location.origin,
       }),
@@ -139,13 +166,17 @@ const start = async () => {
       const { access_token, refresh_token } = await response.json();
       storeTokens(access_token, refresh_token);
 
+      // Clean up PKCE data
+      sessionStorage.removeItem('pkce_code_verifier');
+
       // Clean up URL
       window.history.replaceState({}, document.title, window.location.pathname);
 
       // Show upload form
       showUploadForm();
     } else {
-      console.error("Failed to exchange code for tokens");
+      const errorText = await response.text();
+      console.error("Failed to exchange code for tokens:", response.status, errorText);
     }
   } else {
     // Check if we have stored tokens
