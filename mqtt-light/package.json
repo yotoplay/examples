@@ -15,6 +15,7 @@
   "dependencies": {
     "jwt-decode": "^4.0.0",
     "lodash.debounce": "^4.0.8",
-    "mqtt": "^5.13.1"
+    "mqtt": "^5.13.1",
+    "pkce-challenge": "^5.0.0"
   }
 }

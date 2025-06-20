@@ -1,5 +1,5 @@
 import React from "react";
-import { generatePKCE } from "../pkce-utils";
+import pkceChallenge from "pkce-challenge";
 
 export default function Login() {
   const clientId = import.meta.env.VITE_CLIENT_ID;
@@ -10,11 +10,11 @@ export default function Login() {
 
   const handleLogin = async () => {
     try {
-      // Generate PKCE code verifier and challenge
-      const { codeVerifier, codeChallenge } = await generatePKCE();
+      // Generate PKCE code verifier and challenge using the npm package
+      const { code_verifier, code_challenge } = await pkceChallenge();
       
       // Store the code verifier in session storage for the token exchange
-      sessionStorage.setItem('pkce_code_verifier', codeVerifier);
+      sessionStorage.setItem('pkce_code_verifier', code_verifier);
       
       const authUrl = new URL("https://login.yotoplay.com/authorize");
       authUrl.search = new URLSearchParams({
@@ -22,7 +22,7 @@ export default function Login() {
         scope: "openid offline_access",
         response_type: "code",
         client_id: clientId,
-        code_challenge: codeChallenge,
+        code_challenge: code_challenge,
         code_challenge_method: "S256",
         redirect_uri: window.location.origin,
       }).toString();

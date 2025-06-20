@@ -8,7 +8,7 @@ import {
   clearTokens,
   refreshAccessToken,
 } from "./tokens";
-import { generatePKCE } from "./pkce-utils";
+import pkceChallenge from "pkce-challenge";
 
 const MQTT_URL = "wss://aqrphjqbp3u2z-ats.iot.eu-west-2.amazonaws.com";
 const MQTT_AUTH_NAME = "PublicJWTAuthorizer";
@@ -100,11 +100,11 @@ const handleAuthCallback = async () => {
 // Login function to redirect to OAuth
 const initiateLogin = async () => {
   try {
-    // Generate PKCE code verifier and challenge
-    const { codeVerifier, codeChallenge } = await generatePKCE();
+    // Generate PKCE code verifier and challenge using the npm package
+    const { code_verifier, code_challenge } = await pkceChallenge();
 
     // Store the code verifier in session storage for the token exchange
-    sessionStorage.setItem('pkce_code_verifier', codeVerifier);
+    sessionStorage.setItem('pkce_code_verifier', code_verifier);
 
     const authUrl = "https://login.yotoplay.com/authorize";
     const params = new URLSearchParams({
@@ -112,7 +112,7 @@ const initiateLogin = async () => {
       scope: "offline_access",
       response_type: "code",
       client_id: CLIENT_ID,
-      code_challenge: codeChallenge,
+      code_challenge: code_challenge,
       code_challenge_method: "S256",
       redirect_uri: window.location.origin,
     });
