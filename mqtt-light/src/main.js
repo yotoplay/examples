@@ -8,13 +8,13 @@ import {
   clearTokens,
   refreshAccessToken,
 } from "./tokens";
+import { generatePKCE } from "./pkce-utils";
 
 const MQTT_URL = "wss://aqrphjqbp3u2z-ats.iot.eu-west-2.amazonaws.com";
 const MQTT_AUTH_NAME = "PublicJWTAuthorizer";
 const CLIENT_ID = import.meta.env.VITE_CLIENT_ID;
-const CLIENT_SECRET = import.meta.env.VITE_CLIENT_SECRET;
 
-if (!CLIENT_ID || !CLIENT_SECRET) {
+if (!CLIENT_ID) {
   throw new Error("Missing Yoto OAuth credentials in .env file");
 }
 
@@ -44,8 +44,23 @@ const handleAuthCallback = async () => {
   // Check if we have an authorization code (we've just been redirected from Yoto's login page)
   const params = new URLSearchParams(window.location.search);
   const code = params.get("code");
+  const error = params.get("error");
+
+  if (error) {
+    console.error("Authorization error:", error);
+    return null;
+  }
 
   if (code) {
+    // Get the stored code verifier
+    const codeVerifier = sessionStorage.getItem('pkce_code_verifier');
+    if (!codeVerifier) {
+      console.error("No PKCE code verifier found");
+      return null;
+    }
+
+    console.log("Exchanging authorization code for tokens using PKCE...");
+    
     // Exchange authorization code for tokens
     const response = await fetch("https://login.yotoplay.com/oauth/token", {
       method: "POST",
@@ -55,7 +70,7 @@ const handleAuthCallback = async () => {
       body: new URLSearchParams({
         grant_type: "authorization_code",
         client_id: CLIENT_ID,
-        client_secret: CLIENT_SECRET,
+        code_verifier: codeVerifier,
         code: code,
         redirect_uri: window.location.origin,
       }),
@@ -65,11 +80,16 @@ const handleAuthCallback = async () => {
       const { access_token, refresh_token } = await response.json();
       storeTokens(access_token, refresh_token);
 
+      // Clean up PKCE data
+      sessionStorage.removeItem('pkce_code_verifier');
+
       // Clean up URL
       window.history.replaceState({}, document.title, window.location.pathname);
 
       return access_token;
     } else {
+      const errorText = await response.text();
+      console.error("Failed to exchange code for tokens:", response.status, errorText);
       throw new Error("Failed to exchange code for tokens");
     }
   }
@@ -78,18 +98,59 @@ const handleAuthCallback = async () => {
 };
 
 // Login function to redirect to OAuth
-const initiateLogin = () => {
-  const authUrl = "https://login.yotoplay.com/authorize";
-  const params = new URLSearchParams({
-    audience: "https://api.yotoplay.com",
-    scope: "offline_access",
-    response_type: "code",
-    client_id: CLIENT_ID,
-    redirect_uri: window.location.origin,
-  });
+const initiateLogin = async () => {
+  try {
+    // Generate PKCE code verifier and challenge
+    const { codeVerifier, codeChallenge } = await generatePKCE();
+    
+    // Store the code verifier in session storage for the token exchange
+    sessionStorage.setItem('pkce_code_verifier', codeVerifier);
+    
+    const authUrl = "https://login.yotoplay.com/authorize";
+    const params = new URLSearchParams({
+      audience: "https://api.yotoplay.com",
+      scope: "offline_access",
+      response_type: "code",
+      client_id: CLIENT_ID,
+      code_challenge: codeChallenge,
+      code_challenge_method: "S256",
+      redirect_uri: window.location.origin,
+    });
 
-  // Redirect user to Yoto's login page
-  window.location.href = `${authUrl}?${params.toString()}`;
+    // Redirect user to Yoto's login page
+    window.location.href = `${authUrl}?${params.toString()}`;
+  } catch (error) {
+    console.error("Error generating PKCE:", error);
+  }
+};
+
+// Logout function
+const handleLogout = () => {
+  console.log("Logout clicked, clearing tokens and disconnecting MQTT...");
+  
+  // Disconnect MQTT client if connected
+  if (mqttClient) {
+    mqttClient.end();
+    mqttClient = null;
+  }
+  
+  // Clear tokens
+  clearTokens();
+  
+  // Hide the app and show login message
+  const app = document.getElementById("app");
+  app.innerHTML = `
+    <div class="container">
+      <h2>Logged Out</h2>
+      <p>You have been successfully logged out.</p>
+      <button id="login-button">Login Again</button>
+    </div>
+  `;
+  
+  // Add event listener to the new login button
+  document.getElementById("login-button").addEventListener("click", () => {
+    location.reload();
+  });
 };
 
 const start = async () => {
@@ -110,6 +171,26 @@ const start = async () => {
     initiateLogin();
     return;
   }
+
+  // Add logout button to the UI
+  const container = document.querySelector(".container");
+  const logoutButton = document.createElement("button");
+  logoutButton.id = "logout-button";
+  logoutButton.textContent = "Logout";
+  logoutButton.style.cssText = `
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+  `;
+  logoutButton.addEventListener("click", handleLogout);
+  document.body.appendChild(logoutButton);
 
   const deviceResponse = await fetch(
     "https://api.yotoplay.com/device-v2/devices/mine",
