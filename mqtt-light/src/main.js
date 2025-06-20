@@ -60,7 +60,7 @@ const handleAuthCallback = async () => {
     }
 
     console.log("Exchanging authorization code for tokens using PKCE...");
-    
+
     // Exchange authorization code for tokens
     const response = await fetch("https://login.yotoplay.com/oauth/token", {
       method: "POST",
@@ -102,10 +102,10 @@ const initiateLogin = async () => {
   try {
     // Generate PKCE code verifier and challenge
     const { codeVerifier, codeChallenge } = await generatePKCE();
-    
+
     // Store the code verifier in session storage for the token exchange
     sessionStorage.setItem('pkce_code_verifier', codeVerifier);
-    
+
     const authUrl = "https://login.yotoplay.com/authorize";
     const params = new URLSearchParams({
       audience: "https://api.yotoplay.com",
@@ -127,16 +127,16 @@ const initiateLogin = async () => {
 // Logout function
 const handleLogout = () => {
   console.log("Logout clicked, clearing tokens and disconnecting MQTT...");
-  
+
   // Disconnect MQTT client if connected
   if (mqttClient) {
     mqttClient.end();
     mqttClient = null;
   }
-  
+
   // Clear tokens
   clearTokens();
-  
+
   // Hide the app and show login message
   const app = document.getElementById("app");
   app.innerHTML = `
@@ -146,7 +146,7 @@ const handleLogout = () => {
       <button id="login-button">Login Again</button>
     </div>
   `;
-  
+
   // Add event listener to the new login button
   document.getElementById("login-button").addEventListener("click", () => {
     location.reload();
@@ -173,7 +173,6 @@ const start = async () => {
   }
 
   // Add logout button to the UI
-  const container = document.querySelector(".container");
   const logoutButton = document.createElement("button");
   logoutButton.id = "logout-button";
   logoutButton.textContent = "Logout";
@@ -221,7 +220,7 @@ const start = async () => {
 
   console.log("deviceId", deviceId);
 
-  const clientId = `DASH${deviceId}`;
+  const clientId = `SAMPLE${deviceId}`;
 
   mqttClient = mqtt.connect(MQTT_URL, {
     keepalive: 300,
@@ -249,8 +248,6 @@ const start = async () => {
         `device/${deviceId}/status`,
         `device/${deviceId}/response`,
       ];
-
-      const topic = `device/${deviceId}/response`;
 
       topics.forEach((topic) => {
         mqttClient.subscribe(topic, (err) => {
@@ -300,7 +297,7 @@ function setAmbientLight(color, deviceId) {
   const g = parseInt(color.slice(3, 5), 16);
   const b = parseInt(color.slice(5, 7), 16);
 
-  console.log("setting ambient light to", r, g, b);
+  console.log("setting ambient light to", r, g, b, deviceId);
 
   if (!mqttClient) {
     console.error("Not connected to MQTT broker");
@@ -314,7 +311,7 @@ function setAmbientLight(color, deviceId) {
     if (err) {
       console.error("Error setting ambient light:", err);
     } else {
-      console.log("Ambient light command sent successfully");
+      console.log("Ambient light command sent successfully", deviceId);
     }
   });
 }
