@@ -21,7 +21,7 @@ export default function App() {
           return;
         }
 
-        const res = await fetch("https://api.yotoplay.com/card/mine", {
+        const res = await fetch("https://api.yotoplay.com/content/mine", {
           headers: {
             Authorization: `Bearer ${tokens.accessToken}`,
           },
