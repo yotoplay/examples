@@ -72,7 +72,7 @@ const updateCardsList = async () => {
     return;
   }
 
-  const response = await fetch("https://api.yotoplay.com/card/mine", {
+  const response = await fetch("https://api.yotoplay.com/content/mine", {
     headers: {
       Authorization: `Bearer ${accessToken}`,
     },
