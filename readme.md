@@ -12,3 +12,5 @@ Each sample app has its own README with specific instructions on how to run it i
 
 - [React](react/README.md)
 - [Vanilla JavaScript + HTML](vanilla-js-html/README.md)
+- [MQTT](mqtt/README.md)
+- [NASA API + Text to Speech](nasa-api-streaming/README.md)

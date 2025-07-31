@@ -1,0 +1,3 @@
+[functions]
+  directory = "functions"
+  included_files = ["src/**"]

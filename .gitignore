@@ -12,6 +12,8 @@ dist
 dist-ssr
 *.localcd
 
+.netlify
+
 .env
 .npmrc
 .cursor 

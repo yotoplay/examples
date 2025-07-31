@@ -1,0 +1,17 @@
+{
+  "name": "international-space-station",
+  "module": "src/index.ts",
+  "type": "module",
+  "scripts": {
+    "dev": "open http://localhost:8888/.netlify/functions/iss",
+    "dev:netlify": "netlify dev --no-open"
+  },
+  "dependencies": {
+    "oceans-seas.geojson": "^0.5.0",
+    "satellite.js": "^6.0.0"
+  },
+  "devDependencies": {
+    "@netlify/functions": "^4.1.6",
+    "@types/node": "^22.14.1"
+  }
+}
