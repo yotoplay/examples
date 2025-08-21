@@ -1,0 +1,21 @@
+{
+  "name": "yoto-node-js-example",
+  "type": "module",
+  "version": "1.0.0",
+  "description": "A Node.js example of using the Yoto API",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "keywords": [
+    "yoto",
+    "nodejs"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "configstore": "^7.0.0",
+    "dotenv": "^17.2.1",
+    "jwt-decode": "^4.0.0"
+  }
+}
