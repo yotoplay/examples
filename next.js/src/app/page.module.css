@@ -61,16 +61,14 @@
   gap: 16px;
 }
 
-.ctas a {
+.ctas a,
+.ctas button {
   appearance: none;
   border-radius: 128px;
   height: 48px;
   padding: 0 20px;
   border: 1px solid transparent;
-  transition:
-    background 0.2s,
-    color 0.2s,
-    border-color 0.2s;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -78,9 +76,11 @@
   font-size: 16px;
   line-height: 20px;
   font-weight: 500;
+  text-decoration: none;
 }
 
-a.primary {
+a.primary,
+button.primary {
   background: var(--foreground);
   color: var(--background);
   gap: 8px;
@@ -109,7 +109,8 @@ a.secondary {
 
 /* Enable hover only on non-touch devices */
 @media (hover: hover) and (pointer: fine) {
-  a.primary:hover {
+  a.primary:hover,
+  button.primary:hover {
     background: var(--button-primary-hover);
     border-color: transparent;
   }
@@ -143,7 +144,8 @@ a.secondary {
     flex-direction: column;
   }
 
-  .ctas a {
+  .ctas a,
+  .ctas button {
     font-size: 14px;
     height: 40px;
     padding: 0 16px;

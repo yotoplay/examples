@@ -53,9 +53,9 @@ export async function GET(request) {
     // Store tokens using configstore
     storeTokens(tokens.access_token, tokens.refresh_token);
 
-    // Redirect to authenticated area
+    // Redirect to main page
     const url = new URL(request.url);
-    return Response.redirect(new URL("/dashboard", url.origin));
+    return Response.redirect(new URL("/", url.origin));
   } catch (error) {
     console.error("Auth callback error:", error);
     const url = new URL(request.url);
