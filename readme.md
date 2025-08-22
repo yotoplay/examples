@@ -11,6 +11,7 @@ Each sample app has its own README with specific instructions on how to run it i
 ## List of examples
 
 - [React](react/README.md)
+- [Next.js](next.js/README.md)
 - [Node.js](node.js/README.md)
 - [Vanilla JavaScript + HTML](vanilla-js-html/README.md)
 - [MQTT](mqtt/README.md)
