@@ -23,6 +23,10 @@ Authorization: Bearer <your-jwt-token>
 
 **POST** `https://labs.api.yotoplay.com/content/job`
 
+#### qsParams
+
+`voiceId={11labsVoiceId}`: sets a default voiceId for all text
+
 Creates a new asynchronous processing job for content with ElevenLabs tracks.
 
 **Request Body:**
@@ -41,7 +45,7 @@ Creates a new asynchronous processing job for content with ElevenLabs tracks.
             "title": "The Friendly Dragon",
             "trackUrl": "Once upon a time, in a magical forest, there lived a friendly dragon who loved to read books.",
             "type": "elevenlabs",
-            "voiceId":"JBFqnCBsd6RMkjVDRZzb"
+            "voiceId":"JBFqnCBsd6RMkjVDRZzb" // <-- sets a track level voiceId
           },
           {
             "key": "track2",
