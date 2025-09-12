@@ -22,7 +22,7 @@ Authorization: Bearer <your-jwt-token>
 1. **Create Job**: Submit your content to the `/content/job` endpoint
 2. **Get Job ID**: Receive a job ID for tracking
 3. **Poll Status**: Check job status using the `/content/job/{jobId}` endpoint
-4. **Get Results**: Once completed, the content will be automatically upserted to the Yoto Content API
+4. **Get Results**: Once completed, the content will be automatically upserted to the Yoto Content API and returned as the `job.result` property
 
 ### Async Endpoints
 
