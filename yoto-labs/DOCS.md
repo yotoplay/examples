@@ -2,13 +2,6 @@
 
 This document provides comprehensive API documentation for the Yoto Labs serverless API.
 
-## Table of Contents
-
-- [Authentication](#authentication)
-- [Synchronous Processing (DEPRECATED)](#synchronous-processing)
-- [Async Processing (v1.1)](#async-processing-v11)
-- [Environment Variables](#environment-variables)
-
 ## Authentication
 
 All API requests require a valid JWT token in the Authorization header:
@@ -17,18 +10,18 @@ All API requests require a valid JWT token in the Authorization header:
 Authorization: Bearer <your-jwt-token>
 ```
 
-### Async Processing Flow
+## Async Processing Flow
 
 1. **Create Job**: Submit your content to the `/content/job` endpoint
 2. **Get Job ID**: Receive a job ID for tracking
 3. **Poll Status**: Check job status using the `/content/job/{jobId}` endpoint
 4. **Get Results**: Once completed, the content will be automatically upserted to the Yoto Content API and returned as the `job.result` property
 
-### Async Endpoints
+## Async Endpoints
 
-#### Create Processing Job
+### Create Processing Job
 
-**POST** `/content/job`
+**POST** `https://labs.api.yotoplay.com/content/job`
 
 Creates a new asynchronous processing job for content with ElevenLabs tracks.
 
@@ -84,9 +77,9 @@ Creates a new asynchronous processing job for content with ElevenLabs tracks.
 }
 ```
 
-#### Update Existing Card Job
+### Update Existing Card Job
 
-**POST** `/content/{cardId}/job`
+**POST** `https://labs.api.yotoplay.com/content/{cardId}/job`
 
 Creates a new asynchronous processing job to update an existing card with ElevenLabs tracks.
 
@@ -135,9 +128,9 @@ Creates a new asynchronous processing job to update an existing card with Eleven
 }
 ```
 
-#### Get Job Status
+### Get Job Status
 
-**GET** `/content/job/{jobId}`
+**GET** `https://labs.api.yotoplay.com/content/job/{jobId}`
 
 Retrieves the current status of a processing job.
 
