@@ -40,13 +40,15 @@ Creates a new asynchronous processing job for content with ElevenLabs tracks.
             "key": "track1",
             "title": "The Friendly Dragon",
             "trackUrl": "Once upon a time, in a magical forest, there lived a friendly dragon who loved to read books.",
-            "type": "elevenlabs"
+            "type": "elevenlabs",
+            "voiceId":"JBFqnCBsd6RMkjVDRZzb"
           },
           {
             "key": "track2",
             "title": "The Adventure Begins",
             "trackUrl": "The dragon decided to go on an adventure to find the most interesting book in the world.",
-            "type": "elevenlabs"
+            "type": "elevenlabs",
+            "voiceId":"JBFqnCBsd6RMkjVDRZzb"
           }
         ]
       }
