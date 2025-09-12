@@ -60,11 +60,9 @@ Creates a new asynchronous processing job for content with ElevenLabs tracks.
     ]
   },
   "metadata": {
+    "title": "My Story",
     "description": "A story about a friendly dragon",
-    "category": "STORY",
-    "languages": ["EN"],
-    "minAge": 3,
-    "maxAge": 8
+    ...
   }
 }
 ```
@@ -113,11 +111,9 @@ Creates a new asynchronous processing job to update an existing card with Eleven
     ]
   },
   "metadata": {
+    "title": "My Story",
     "description": "A story about a friendly dragon",
-    "category": "STORY",
-    "languages": ["EN"],
-    "minAge": 3,
-    "maxAge": 8
+    ...
   }
 }
 ```
