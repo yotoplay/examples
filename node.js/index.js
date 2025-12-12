@@ -105,7 +105,7 @@ async function deviceLogin({ clientId }) {
 }
 
 // Get fresh access token
-async function getAccessToken(clientId, refreshToken) {
+async function getAccessTokens(clientId, refreshToken) {
   const tokenResponse = await fetch("https://login.yotoplay.com/oauth/token", {
     method: "POST",
     headers: {
@@ -126,7 +126,7 @@ async function getAccessToken(clientId, refreshToken) {
   }
 
   const tokenData = await tokenResponse.json();
-  return tokenData.access_token;
+  return tokenData;
 }
 
 async function main() {
@@ -153,7 +153,11 @@ async function main() {
   }
 
   // Get access token
-  const accessToken = await getAccessToken(clientId, savedRefreshToken);
+  const accessTokenData = await getAccessTokens(clientId, savedRefreshToken);
+  const accessToken = accessTokenData.access_token;
+  const refreshToken = accessTokenData.refresh_token;
+  // save the refresh token for the next request
+  config.set("refresh_token", refreshToken);
 
   // Get cards
   console.log("📚 Fetching your cards...");
