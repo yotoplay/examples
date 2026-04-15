@@ -4,6 +4,10 @@ A vanilla JavaScript example of how to use the Yoto API (no framework).
 
 It shows you how to authenticate and upload an audio file to a card.
 
+The example requests these OAuth scopes during login:
+- `family:library:view`
+- `user:content:view`
+
 ## Running the example
 
 ## Getting Started

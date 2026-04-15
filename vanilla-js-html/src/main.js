@@ -9,6 +9,10 @@ import { uploadToCard } from "./upload";
 import pkceChallenge from "pkce-challenge";
 
 const clientId = import.meta.env.VITE_CLIENT_ID;
+const scopes = [
+  "family:library:view",
+  "user:content:view",
+].join(" ");
 
 if (!clientId) {
   throw new Error("Client ID is required");
@@ -34,6 +38,23 @@ const getValidAccessToken = async () => {
 
 // login button click events
 const loginButton = document.getElementById("login-button");
+const logoutButton = document.getElementById("logout-button");
+const formContainer = document.querySelector(".upload-form-container");
+
+const showLoggedOutState = () => {
+  clearTokens();
+  sessionStorage.removeItem("pkce_code_verifier");
+  formContainer.style.display = "none";
+  logoutButton.style.display = "none";
+  loginButton.style.display = "block";
+  window.history.replaceState({}, document.title, window.location.pathname);
+};
+
+logoutButton.addEventListener("click", () => {
+  console.log("Logout clicked, clearing tokens...");
+  showLoggedOutState();
+});
+
 loginButton.addEventListener("click", async () => {
   try {
     // Generate PKCE code verifier and challenge using the npm package
@@ -45,7 +66,7 @@ loginButton.addEventListener("click", async () => {
     const authUrl = "https://login.yotoplay.com/authorize";
     const params = new URLSearchParams({
       audience: "https://api.yotoplay.com",
-      scope: "offline_access",
+      scope: scopes,
       response_type: "code",
       client_id: clientId,
       code_challenge: code_challenge,
@@ -134,6 +155,7 @@ const start = async () => {
 
   if (error) {
     console.error("Authorization error:", error);
+    logoutButton.style.display = "block";
     return;
   }
 
@@ -177,6 +199,7 @@ const start = async () => {
     } else {
       const errorText = await response.text();
       console.error("Failed to exchange code for tokens:", response.status, errorText);
+      logoutButton.style.display = "block";
     }
   } else {
     // Check if we have stored tokens
@@ -190,24 +213,10 @@ const start = async () => {
 const showUploadForm = async () => {
   // Hide login button and show upload form
   loginButton.style.display = "none";
-  const formContainer = document.querySelector(".upload-form-container");
   formContainer.style.display = "block";
 
   // Show logout button
-  const logoutButton = document.getElementById("logout-button");
   logoutButton.style.display = "block";
-
-  // Setup logout functionality
-  logoutButton.addEventListener("click", () => {
-    console.log("Logout clicked, clearing tokens...");
-    clearTokens();
-    console.log("Tokens cleared, redirecting to login");
-
-    // Hide upload form and show login button
-    formContainer.style.display = "none";
-    logoutButton.style.display = "none";
-    loginButton.style.display = "block";
-  });
 
   // Load initial cards list
   await updateCardsList();
