@@ -30,6 +30,16 @@ export default async function Home() {
   const cards = await getCards();
   const storedTokens = getStoredTokens();
   const isLoggedIn = !!storedTokens?.accessToken;
+  const hasClientId = !!process.env.YOTO_CLIENT_ID;
+  const hasClientSecret = !!process.env.YOTO_CLIENT_SECRET;
+
+  if (!hasClientId) {
+    console.log("YOTO_CLIENT_ID is missing");
+  }
+
+  if (!hasClientSecret) {
+    console.log("YOTO_CLIENT_SECRET is missing");
+  }
 
   return (
     <div className={styles.page}>
