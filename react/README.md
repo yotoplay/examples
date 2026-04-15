@@ -1,6 +1,6 @@
 # Yoto React Example App
 
-The react compilation is provided by [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) which uses [SWC](https://swc.rs/).
+This example uses [@vitejs/plugin-react](https://www.npmjs.com/package/@vitejs/plugin-react) with Vite.
 
 ## Getting Started
 
@@ -18,13 +18,27 @@ The react compilation is provided by [@vitejs/plugin-react-swc](https://github.c
 
    **Note**: This app uses PKCE (Proof Key for Code Exchange) for security, so no client secret is needed!
 
-2. Install dependencies:
+2. In your Yoto application settings in the dashboard, add this allowed callback URL:
+
+   ```
+   http://localhost:3000
+   ```
+
+3. This example requests these scopes during login:
+
+   ```
+   openid family:library:view user:content:view
+   ```
+
+   Add `offline_access` only if that scope has been pre-approved for your client.
+
+4. Install dependencies:
 
    ```bash
    npm install
    ```
 
-3. Start the development server:
+5. Start the development server:
    ```bash
    npm start
    ```

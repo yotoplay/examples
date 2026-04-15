@@ -4,15 +4,30 @@ import { getTokens, storageKey } from "./token-utils";
 
 function Index() {
   const navigate = useNavigate();
+  const clientId = import.meta.env.VITE_CLIENT_ID;
+
+  if (!clientId) {
+    throw new Error("VITE_CLIENT_ID is not set");
+  }
 
   useEffect(() => {
     async function checkAuth() {
       const params = new URLSearchParams(window.location.search);
       const code = params.get("code");
       const error = params.get("error");
+      const errorDescription = params.get("error_description");
       if (error) {
-        console.log("Error:", error);
-        navigate("/login");
+        console.error("Authorization error:", error, errorDescription);
+
+        const loginParams = new URLSearchParams({
+          error,
+        });
+
+        if (errorDescription) {
+          loginParams.set("error_description", errorDescription);
+        }
+
+        navigate(`/login?${loginParams.toString()}`);
         return;
       }
 
@@ -38,7 +53,7 @@ function Index() {
           },
           body: new URLSearchParams({
             grant_type: "authorization_code",
-            client_id: import.meta.env.VITE_CLIENT_ID,
+            client_id: clientId,
             code_verifier: codeVerifier,
             code,
             redirect_uri: window.location.origin,
@@ -87,7 +102,7 @@ function Index() {
     }
 
     checkAuth();
-  }, [navigate]);
+  }, [clientId, navigate]);
 
   return <div>Checking auth...</div>;
 }
