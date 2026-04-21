@@ -8,10 +8,10 @@
   },
   "dependencies": {
     "oceans-seas.geojson": "^0.5.0",
-    "satellite.js": "^6.0.0"
+    "satellite.js": "^7.0.0"
   },
   "devDependencies": {
-    "@netlify/functions": "^4.1.6",
-    "@types/node": "^22.14.1"
+    "@netlify/functions": "^5.2.0",
+    "@types/node": "^25.6.0"
   }
 }

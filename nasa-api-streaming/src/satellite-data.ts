@@ -1,4 +1,4 @@
-import satellite from "satellite.js";
+import * as satellite from "satellite.js";
 
 export async function getSatelliteData(satelliteNumber = "49044") {
   // This looks like a personal website
