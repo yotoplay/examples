@@ -10,7 +10,7 @@
     "preview": "vite preview"
   },
   "devDependencies": {
-    "vite": "^6.3.5"
+    "vite": "^6.4.2"
   },
   "dependencies": {
     "jwt-decode": "^4.0.0",
