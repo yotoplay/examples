@@ -2,9 +2,17 @@ import Configstore from "configstore";
 import "dotenv/config";
 
 const clientId = process.env.YOTO_CLIENT_ID;
-const config = new Configstore("yoto-cards-list");
+const config = new Configstore("yoto-nodejs-example");
+const scopes = [
+  "openid",
+  "offline_access",
+  "family:library:view",
+  "user:content:view",
+].join(" ");
 
-const sleep = (t) => new Promise((resolve) => setTimeout(resolve, t));
+const sleep = (t) => {
+  return new Promise((resolve) => setTimeout(resolve, t));
+};
 
 // Device code auth
 async function deviceLogin({ clientId }) {
@@ -22,15 +30,15 @@ async function deviceLogin({ clientId }) {
       },
       body: new URLSearchParams({
         client_id: clientId,
-        scope: "openid profile offline_access",
+        scope: scopes,
         audience: "https://api.yotoplay.com",
       }),
-    }
+    },
   );
 
   if (!deviceAuthResponse.ok) {
     throw new Error(
-      `Device authorization failed: ${deviceAuthResponse.statusText}`
+      `Device authorization failed: ${deviceAuthResponse.statusText}`,
     );
   }
 
@@ -68,7 +76,7 @@ async function deviceLogin({ clientId }) {
           client_id: clientId,
           audience: "https://api.yotoplay.com",
         }),
-      }
+      },
     );
 
     const responseBody = await tokenResponse.json();
@@ -87,13 +95,13 @@ async function deviceLogin({ clientId }) {
       } else if (errorData.error === "slow_down") {
         intervalMs += 5000;
         console.log(
-          `Received slow_down, increasing interval to ${intervalMs}ms`
+          `Received slow_down, increasing interval to ${intervalMs}ms`,
         );
         await sleep(intervalMs);
         continue;
       } else if (errorData.error === "expired_token") {
         throw new Error(
-          "Device code has expired. Please restart the device login process."
+          "Device code has expired. Please restart the device login process.",
         );
       } else {
         throw new Error(errorData.error_description || errorData.error);
@@ -121,7 +129,7 @@ async function getAccessTokens(clientId, refreshToken) {
 
   if (!tokenResponse.ok) {
     throw new Error(
-      `Refresh token request failed: ${tokenResponse.statusText}`
+      `Refresh token request failed: ${tokenResponse.statusText}`,
     );
   }
 

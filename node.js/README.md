@@ -1,6 +1,13 @@
-# Yoto Cards List - Vanilla Node.js Example
+# Yoto Cards List - Node.js Example
 
-A vanilla Node.js example for the Yoto API that uses device login flow and lists your cards
+A Node.js example for the Yoto API that uses the device login flow and lists your cards.
+
+The OAuth client must use these scopes:
+
+- `openid`
+- `offline_access`
+- `family:library:view`
+- `user:content:view`
 
 ## Setup
 
@@ -12,8 +19,10 @@ A vanilla Node.js example for the Yoto API that uses device login flow and lists
 
 2. **Create a .env file**:
    ```bash
-   echo "YOTO_CLIENT_ID=your_client_id_here" > .env
+   cp .env.example .env
    ```
+
+   Set `YOTO_CLIENT_ID` to a client ID for an app configured with the scopes above, including `offline_access`.
 
 ## Usage
 
@@ -39,11 +48,11 @@ No saved authentication found. Starting device login...
 ├─────────────────────────────┼──────────────────────────────────────────────────────────────┤
 │ user_code                   │ ABCD-EFGH                                                    │
 ├─────────────────────────────┼──────────────────────────────────────────────────────────────┤
-│ expires_in_minutes          │ 5                                                            │
+│ expires_in_minutes          │ 15                                                           │
 └─────────────────────────────┴──────────────────────────────────────────────────────────────┘
 ```
 
-1. Visit the verification URL or scan the QR code (if you have one)
+1. Visit the verification URL
 2. Enter the user code when prompted
 3. Complete the authentication on your device
 4. The script will automatically continue and show your cards

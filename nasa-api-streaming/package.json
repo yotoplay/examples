@@ -4,7 +4,8 @@
   "type": "module",
   "scripts": {
     "dev": "open http://localhost:8888/.netlify/functions/iss",
-    "dev:netlify": "netlify dev --no-open"
+    "dev:netlify": "netlify dev --no-open",
+    "test": "bun test"
   },
   "dependencies": {
     "oceans-seas.geojson": "^0.5.0",
