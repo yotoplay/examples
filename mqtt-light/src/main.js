@@ -13,6 +13,11 @@ import pkceChallenge from "pkce-challenge";
 const MQTT_URL = "wss://aqrphjqbp3u2z-ats.iot.eu-west-2.amazonaws.com";
 const MQTT_AUTH_NAME = "PublicJWTAuthorizer";
 const CLIENT_ID = import.meta.env.VITE_CLIENT_ID;
+const scopes = [
+  "offline_access",
+  "family:devices:view",
+  "family:devices:control",
+].join(" ");
 
 if (!CLIENT_ID) {
   throw new Error("Missing Yoto OAuth credentials in .env file");
@@ -109,7 +114,7 @@ const initiateLogin = async () => {
     const authUrl = "https://login.yotoplay.com/authorize";
     const params = new URLSearchParams({
       audience: "https://api.yotoplay.com",
-      scope: "offline_access",
+      scope: scopes,
       response_type: "code",
       client_id: CLIENT_ID,
       code_challenge: code_challenge,

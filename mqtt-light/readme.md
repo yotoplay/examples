@@ -2,6 +2,12 @@
 
 A vanilla JavaScript example that connects to your Yoto device via MQTT and allows you to control the ambient light.
 
+The OAuth client must use these scopes:
+
+- `offline_access`
+- `family:devices:view`
+- `family:devices:control`
+
 ## Getting Started
 
 1. Copy the example environment file and fill in your Yoto API credentials:
@@ -17,6 +23,8 @@ A vanilla JavaScript example that connects to your Yoto device via MQTT and allo
    ```
 
    **Note**: This app uses PKCE (Proof Key for Code Exchange) for security, so no client secret is needed!
+
+   Use a client ID for an app configured with the scopes above, including `offline_access`.
 
 2. Install dependencies:
 

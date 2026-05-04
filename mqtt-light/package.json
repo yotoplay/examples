@@ -10,12 +10,12 @@
     "preview": "vite preview"
   },
   "devDependencies": {
-    "vite": "^6.3.5"
+    "vite": "^8.0.10"
   },
   "dependencies": {
     "jwt-decode": "^4.0.0",
     "lodash.debounce": "^4.0.8",
-    "mqtt": "^5.13.1",
-    "pkce-challenge": "^5.0.0"
+    "mqtt": "^5.15.1",
+    "pkce-challenge": "^6.0.0"
   }
 }
