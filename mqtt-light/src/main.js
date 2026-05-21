@@ -246,12 +246,11 @@ const start = async () => {
   mqttClient.on("connect", () => {
     console.log("Connected to Yoto MQTT broker");
 
-    // Subscribe to device topics for events, status, and responses
+    // Subscribe to the public device data topics
     if (deviceId) {
       const topics = [
-        `device/${deviceId}/events`,
-        `device/${deviceId}/status`,
-        `device/${deviceId}/response`,
+        `device/${deviceId}/data/events`,
+        `device/${deviceId}/data/status`,
       ];
 
       topics.forEach((topic) => {
@@ -273,22 +272,18 @@ const start = async () => {
     console.log(`MQTT Topic: ${topic}`);
     console.log(`MQTT Message: ${message.toString()}`);
 
-    const [base, device, messageType] = topic.split("/");
+    if (!topic.startsWith(`device/${deviceId}/`)) return;
 
-    if (device === deviceId) {
-      try {
-        const payload = JSON.parse(message.toString());
+    try {
+      const payload = JSON.parse(message.toString());
 
-        if (messageType === "events") {
-          parseEventsMessage(payload);
-        } else if (messageType === "status") {
-          parseStatusMessage(payload);
-        } else if (messageType === "response") {
-          parseResponseMessage(payload);
-        }
-      } catch (error) {
-        console.error("Error parsing MQTT message:", error);
+      if (topic.endsWith("/data/events")) {
+        parseEventsMessage(payload);
+      } else if (topic.endsWith("/data/status")) {
+        parseStatusMessage(payload);
       }
+    } catch (error) {
+      console.error("Error parsing MQTT message:", error);
     }
   });
 
@@ -344,11 +339,6 @@ function parseEventsMessage(message) {
 
 function parseStatusMessage(message) {
   console.log("=== STATUS MESSAGE ===");
-  console.log(message);
-}
-
-function parseResponseMessage(message) {
-  console.log("=== RESPONSE MESSAGE ===");
   console.log(message);
 }
 
