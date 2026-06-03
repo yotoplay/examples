@@ -3,7 +3,6 @@ import { useLocation } from "react-router";
 import pkceChallenge from "pkce-challenge";
 
 const defaultScopes = [
-  "openid",
   "family:library:view",
   "user:content:view",
 ].join(" ");

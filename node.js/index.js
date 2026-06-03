@@ -1,115 +1,158 @@
 import Configstore from "configstore";
+import crypto from "node:crypto";
+import { createServer } from "node:http";
 import "dotenv/config";
 
 const clientId = process.env.YOTO_CLIENT_ID;
-const config = new Configstore("yoto-nodejs-example");
+const redirectPort = 8787;
+const redirectHost = "127.0.0.1";
+const redirectPath = "/callback";
+const redirectUri = `http://${redirectHost}:${redirectPort}${redirectPath}`;
+const config = new Configstore("yoto-nodejs-localhost-example-aaa");
 const scopes = [
-  "openid",
   "offline_access",
   "family:library:view",
   "user:content:view",
 ].join(" ");
 
-const sleep = (t) => {
-  return new Promise((resolve) => setTimeout(resolve, t));
-};
+function createCodeVerifier() {
+  return crypto.randomBytes(64).toString("base64url");
+}
 
-// Device code auth
-async function deviceLogin({ clientId }) {
+function createCodeChallenge(codeVerifier) {
+  return crypto
+    .createHash("sha256")
+    .update(codeVerifier)
+    .digest("base64url");
+}
+
+function createAuthorizationUrl({ clientId, codeChallenge, state }) {
+  const authorizationUrl = new URL("https://login.yotoplay.com/authorize");
+  authorizationUrl.search = new URLSearchParams({
+    client_id: clientId,
+    response_type: "code",
+    redirect_uri: redirectUri,
+    scope: scopes,
+    audience: "https://api.yotoplay.com",
+    code_challenge: codeChallenge,
+    code_challenge_method: "S256",
+    state,
+  }).toString();
+
+  return authorizationUrl.toString();
+}
+
+function waitForAuthorizationCode({ expectedState }) {
+  return new Promise((resolve, reject) => {
+    const server = createServer((request, response) => {
+      const requestUrl = new URL(request.url, redirectUri);
+
+      if (requestUrl.pathname !== redirectPath) {
+        response.writeHead(404, { "Content-Type": "text/plain" }).end("Not found");
+        return;
+      }
+
+      const error = requestUrl.searchParams.get("error");
+      if (error) {
+        response
+          .writeHead(400, { "Content-Type": "text/plain" })
+          .end(`Authentication failed: ${error}. You can close this tab.`);
+        server.close();
+        reject(new Error(`Authorization failed: ${error}`));
+        return;
+      }
+
+      const state = requestUrl.searchParams.get("state");
+      if (state !== expectedState) {
+        response
+          .writeHead(400, { "Content-Type": "text/plain" })
+          .end("Authentication failed: state did not match. You can close this tab.");
+        server.close();
+        reject(new Error("Authorization failed: state did not match"));
+        return;
+      }
+
+      const code = requestUrl.searchParams.get("code");
+      if (!code) {
+        response
+          .writeHead(400, { "Content-Type": "text/plain" })
+          .end("Authentication failed: missing code. You can close this tab.");
+        server.close();
+        reject(new Error("Authorization failed: missing code"));
+        return;
+      }
+
+      response
+        .writeHead(200, { "Content-Type": "text/plain" })
+        .end("Authentication complete. You can close this tab.");
+      server.close();
+      resolve(code);
+    });
+
+    server.once("error", (error) => {
+      reject(error);
+    });
+
+    server.listen(redirectPort, redirectHost);
+  });
+}
+
+async function exchangeAuthorizationCode({ clientId, code, codeVerifier }) {
+  const tokenResponse = await fetch("https://login.yotoplay.com/oauth/token", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: new URLSearchParams({
+      grant_type: "authorization_code",
+      client_id: clientId,
+      code,
+      code_verifier: codeVerifier,
+      redirect_uri: redirectUri,
+      audience: "https://api.yotoplay.com",
+    }),
+  });
+
+  if (!tokenResponse.ok) {
+    throw new Error(
+      `Authorization code exchange failed: ${tokenResponse.statusText}`,
+    );
+  }
+
+  const tokenData = await tokenResponse.json();
+  return tokenData;
+}
+
+async function browserLogin({ clientId }) {
   if (!clientId) {
     throw new Error("clientId is required");
   }
 
-  // Get the device auth urls
-  const deviceAuthResponse = await fetch(
-    "https://login.yotoplay.com/oauth/device/code",
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-      body: new URLSearchParams({
-        client_id: clientId,
-        scope: scopes,
-        audience: "https://api.yotoplay.com",
-      }),
-    },
-  );
+  const codeVerifier = createCodeVerifier();
+  const codeChallenge = createCodeChallenge(codeVerifier);
+  const state = crypto.randomBytes(32).toString("base64url");
+  const authorizationUrl = createAuthorizationUrl({
+    clientId,
+    codeChallenge,
+    state,
+  });
+  const codePromise = waitForAuthorizationCode({ expectedState: state });
 
-  if (!deviceAuthResponse.ok) {
-    throw new Error(
-      `Device authorization failed: ${deviceAuthResponse.statusText}`,
-    );
-  }
+  console.log("⚠️  Before continuing, make sure this callback URL is allowed in your Yoto app:");
+  console.log(redirectUri);
+  console.log("\nOpen this URL in your browser to authenticate:");
+  console.log(authorizationUrl);
+  console.log(`\nWaiting for the redirect on ${redirectUri} ...\n`);
 
-  const authResult = await deviceAuthResponse.json();
-  const {
-    device_code,
-    verification_uri,
-    verification_uri_complete,
-    user_code,
-    interval = 5,
-    expires_in = 300,
-  } = authResult;
-
-  console.table({
-    verification_uri,
-    verification_uri_complete,
-    user_code,
-    expires_in_minutes: Math.round(expires_in / 60),
+  const code = await codePromise;
+  const tokenData = await exchangeAuthorizationCode({
+    clientId,
+    code,
+    codeVerifier,
   });
 
-  // Poll for the token
-  let intervalMs = interval * 1000;
-
-  while (true) {
-    const tokenResponse = await fetch(
-      "https://login.yotoplay.com/oauth/token",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body: new URLSearchParams({
-          grant_type: "urn:ietf:params:oauth:grant-type:device_code",
-          device_code,
-          client_id: clientId,
-          audience: "https://api.yotoplay.com",
-        }),
-      },
-    );
-
-    const responseBody = await tokenResponse.json();
-
-    if (tokenResponse.ok) {
-      console.log("Authorization successful, received tokens");
-      return responseBody;
-    }
-
-    if (tokenResponse.status === 403) {
-      const errorData = responseBody;
-      if (errorData.error === "authorization_pending") {
-        console.log("Authorization pending, waiting...");
-        await sleep(intervalMs);
-        continue;
-      } else if (errorData.error === "slow_down") {
-        intervalMs += 5000;
-        console.log(
-          `Received slow_down, increasing interval to ${intervalMs}ms`,
-        );
-        await sleep(intervalMs);
-        continue;
-      } else if (errorData.error === "expired_token") {
-        throw new Error(
-          "Device code has expired. Please restart the device login process.",
-        );
-      } else {
-        throw new Error(errorData.error_description || errorData.error);
-      }
-    }
-
-    throw new Error(`Token request failed: ${tokenResponse.statusText}`);
-  }
+  console.log("Authorization successful, received tokens");
+  return tokenData;
 }
 
 // Get fresh access token
@@ -149,10 +192,10 @@ async function main() {
   // Check if we already have a refresh token
   let savedRefreshToken = config.get("refresh_token");
 
-  // If no refresh token, do device login
+  // If no refresh token, use browser login with a loopback callback
   if (!savedRefreshToken) {
-    console.log("No saved authentication found. Starting device login...\n");
-    const response = await deviceLogin({ clientId });
+    console.log("No saved authentication found. Starting browser login...\n");
+    const response = await browserLogin({ clientId });
     savedRefreshToken = response.refresh_token;
     config.set("refresh_token", savedRefreshToken);
     console.log("✅ Authentication successful and saved!\n");

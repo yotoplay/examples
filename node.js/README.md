@@ -1,13 +1,18 @@
 # Yoto Cards List - Node.js Example
 
-A Node.js example for the Yoto API that uses the device login flow and lists your cards.
+A Node.js example for the Yoto API that uses browser login with a loopback callback and lists your cards.
 
 The OAuth client must use these scopes:
 
-- `openid`
 - `offline_access`
 - `family:library:view`
 - `user:content:view`
+
+The OAuth client must allow this callback URL:
+
+```text
+http://127.0.0.1:8787/callback
+```
 
 ## Setup
 
@@ -39,23 +44,21 @@ On your first run, you'll see something like:
 ```
 =========================
 
-No saved authentication found. Starting device login...
+No saved authentication found. Starting browser login...
 
-┌─────────────────────────────┬──────────────────────────────────────────────────────────────┐
-│ verification_uri            │ https://login.yotoplay.com/activate                          │
-├─────────────────────────────┼──────────────────────────────────────────────────────────────┤
-│ verification_uri_complete   │ https://login.yotoplay.com/activate?user_code=ABCD-EFGH      │
-├─────────────────────────────┼──────────────────────────────────────────────────────────────┤
-│ user_code                   │ ABCD-EFGH                                                    │
-├─────────────────────────────┼──────────────────────────────────────────────────────────────┤
-│ expires_in_minutes          │ 15                                                           │
-└─────────────────────────────┴──────────────────────────────────────────────────────────────┘
+Before continuing, make sure this callback URL is allowed in your Yoto app:
+http://127.0.0.1:8787/callback
+
+Open this URL in your browser to authenticate:
+https://login.yotoplay.com/authorize?client_id=...
+
+Waiting for the redirect on http://127.0.0.1:8787/callback ...
 ```
 
-1. Visit the verification URL
-2. Enter the user code when prompted
-3. Complete the authentication on your device
-4. The script will automatically continue and show your cards
+1. Open the authorization URL
+2. Complete authentication in your browser
+3. The browser redirects to the local callback
+4. The script exchanges the authorization code and shows your cards
 
 ## Subsequent Runs
 

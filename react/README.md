@@ -27,7 +27,7 @@ This example uses [@vitejs/plugin-react](https://www.npmjs.com/package/@vitejs/p
 3. This example requests these scopes during login:
 
    ```
-   openid family:library:view user:content:view
+   family:library:view user:content:view
    ```
 
    Add `offline_access` only if that scope has been pre-approved for your client.
