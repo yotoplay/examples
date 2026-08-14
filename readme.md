@@ -13,6 +13,7 @@ Each sample app has its own README with specific instructions on how to run it i
 - [React](react/README.md)
 - [Next.js](next.js/README.md)
 - [Node.js](node.js/README.md)
+- [Playing a card as an alarm](card-alarm/README.md)
 - [Vanilla JavaScript + HTML](vanilla-js-html/README.md)
 - [MQTT](mqtt-light/readme.md)
 - [NASA API + Text to Speech](nasa-api-streaming/README.md)

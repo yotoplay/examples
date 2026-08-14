@@ -1,0 +1,19 @@
+{
+  "name": "yoto-card-alarm-example",
+  "type": "module",
+  "version": "1.0.0",
+  "description": "Schedule a Yoto card as a player alarm",
+  "main": "index.js",
+  "keywords": [
+    "yoto",
+    "nodejs"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "configstore": "^7.0.0",
+    "dotenv": "^17.2.1",
+    "express": "^5.2.1",
+    "jwt-decode": "^4.0.0"
+  }
+}
