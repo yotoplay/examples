@@ -24,8 +24,7 @@ Add the corresponding production callback URL before deploying.
 
 ## Notes on the OAuth config
 
-This app is a third-party client, and Auth0's "strict" third-party security mode (which Yoto
-uses) doesn't issue an ID token or serve the standard `openid`/`profile`/`email` scopes or the
+Auth0's "strict" third-party security mode doesn't issue an ID token or serve the standard `openid`/`profile`/`email` scopes or the
 native `/userinfo` endpoint to third-party clients. So this example:
 
 - Requests `user:profile:view`/`user:email:view` instead of `profile`/`email`, and points
