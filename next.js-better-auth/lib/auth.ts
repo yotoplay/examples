@@ -15,22 +15,32 @@ export const auth = betterAuth({
       config: [
         {
           providerId: yotoProviderId,
-          discoveryUrl: 'https://login.yotoplay.com/.well-known/openid-configuration',
+          // Not using `discoveryUrl` deliberately: better-auth's genericOAuth plugin
+          // unconditionally overwrites `userInfoUrl` with the discovery document's
+          // `userinfo_endpoint` whenever `discoveryUrl` is set, which would silently undo the
+          // override below. Auth0's native `/userinfo` also isn't available to strict-mode
+          // third-party clients at all, so discovery can't be used here regardless.
+          authorizationUrl: 'https://login.yotoplay.com/authorize',
+          tokenUrl: 'https://login.yotoplay.com/oauth/token',
           clientId: process.env.YOTO_CLIENT_ID!,
           clientSecret: process.env.YOTO_CLIENT_SECRET!,
+          // Strict-mode third-party clients require PKCE unconditionally, including
+          // confidential/server-side clients like this one - not just public/SPA clients.
+          pkce: true,
           scopes: [
             'openid',
-            'profile',
-            'email',
             'offline_access',
             'user:content:view',
+            'user:profile:view',
+            'user:email:view',
           ],
           authorizationUrlParams: {
             audience: 'https://api.yotoplay.com'
           },
           tokenUrlParams: {
             audience: 'https://api.yotoplay.com'
-          }
+          },
+          userInfoUrl: 'https://api.yotoplay.com/user/userinfo'
         }
       ]
     }),
